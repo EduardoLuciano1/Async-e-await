@@ -1,2 +1,6 @@
 # Async-e-await
-Repositório destinado ao projeto com o Professor Bruno Zolotareff
+Repositório feito para a atividade de F.I. com o Professor Bruno Zolotareff
+
+Eduardo Lemes e Cauê Ishiki
+
+
