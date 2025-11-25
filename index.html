@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumo de Dados com Async/Await</title>
+    <!-- Inclui o Tailwind CSS para estilização rápida e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        .container-card {
+            max-width: 480px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+
+    <div id="app" class="container-card w-full bg-white p-8 rounded-xl shadow-2xl border border-gray-100">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Consulta de Dados do Usuário</h1>
+
+        <!-- Botão que dispara a função assíncrona -->
+        <button id="fetchButton" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition duration-300">
+            Carregar Dados do Usuário
+        </button>
+
+        <!-- Área de feedback e resultados -->
+        <div id="feedback" class="mt-4 text-center text-sm font-medium text-gray-600">
+            Clique no botão para iniciar a requisição.
+        </div>
+
+        <!-- Área de exibição dos dados (simulando campos de um formulário) -->
+        <div id="dataDisplay" class="mt-6 space-y-4 bg-indigo-50 p-5 rounded-lg border border-indigo-200 hidden">
+            <h2 class="text-xl font-semibold text-indigo-800">Dicionário de Dados Recebidos</h2>
+            
+            <!-- Campo Nome -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Nome:</label>
+                <div id="data-name" class="mt-1 p-2 bg-white border border-gray-300 rounded-md font-mono text-gray-900">...</div>
+            </div>
+
+            <!-- Campo Endereço -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Endereço:</label>
+                <div id="data-address" class="mt-1 p-2 bg-white border border-gray-300 rounded-md font-mono text-gray-900">...</div>
+            </div>
+            
+            <!-- Campo Telefone -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Telefone:</label>
+                <div id="data-phone" class="mt-1 p-2 bg-white border border-gray-300 rounded-md font-mono text-gray-900">...</div>
+            </div>
+
+            <!-- Campo E-mail -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">E-mail:</label>
+                <div id="data-email" class="mt-1 p-2 bg-white border border-gray-300 rounded-md font-mono text-gray-900">...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Definição do "Dicionário de Dados" (JSON) simulado
+        const MOCK_USER_DATA = {
+            name: "Ana Carolina da Silva",
+            address: "Rua das Flores, 123, Centro, Cidade Exemplo - SP",
+            phone: "(11) 98765-4321",
+            email: "ana.carolina@exemplo.com.br"
+        };
+
+        // 2. Função assíncrona que usa async/await para simular uma requisição
+        async function fetchUserData() {
+            const button = document.getElementById('fetchButton');
+            const feedback = document.getElementById('feedback');
+            const dataDisplay = document.getElementById('dataDisplay');
+            
+            // Desabilita o botão e atualiza o feedback
+            button.disabled = true;
+            button.textContent = "Carregando dados...";
+            feedback.textContent = "Aguardando resposta da API (simulando 2 segundos)...";
+            dataDisplay.classList.add('hidden');
+
+            try {
+                // Simula uma chamada real à API usando 'fetch'
+                // Para o exemplo, vamos apenas retornar uma Promise resolvida após um atraso (timeout)
+                const apiResponse = await new Promise(resolve => {
+                    setTimeout(() => {
+                        // Simula a resposta bem-sucedida de uma API com o status 200 e o JSON
+                        resolve({
+                            ok: true,
+                            json: () => Promise.resolve(MOCK_USER_DATA)
+                        });
+                    }, 2000); // Aguarda 2 segundos
+                });
+
+                // Await 1: Aguarda a Promise da simulação acima ser resolvida (após 2 segundos)
+                if (!apiResponse.ok) {
+                    throw new Error('Erro ao buscar dados do usuário.');
+                }
+
+                // Await 2: Simula o processamento da resposta para obter o JSON
+                const userData = await apiResponse.json();
+
+                // 3. Atualiza os campos do HTML com os dados
+                document.getElementById('data-name').textContent = userData.name;
+                document.getElementById('data-address').textContent = userData.address;
+                document.getElementById('data-phone').textContent = userData.phone;
+                document.getElementById('data-email').textContent = userData.email;
+
+                // Exibe a área de resultados e atualiza o feedback
+                dataDisplay.classList.remove('hidden');
+                feedback.textContent = "Dados carregados com sucesso!";
+
+            } catch (error) {
+                // 4. Tratamento de erros
+                console.error("Erro na operação assíncrona:", error);
+                feedback.textContent = `Erro: ${error.message}. Tente novamente.`;
+                dataDisplay.classList.add('hidden');
+
+            } finally {
+                // 5. Bloco 'finally' garante que o botão seja reabilitado
+                button.disabled = false;
+                button.textContent = "Carregar Dados do Usuário";
+            }
+        }
+
+        // 6. Configura o Event Listener para o botão
+        document.getElementById('fetchButton').addEventListener('click', fetchUserData);
+    </script>
+
+</body>
+</html>
