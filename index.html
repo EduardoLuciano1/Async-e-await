@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Futebol com Async/Await</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #quiz-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        #question-text {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #333;
+            min-height: 50px; /* Garante espaço para a pergunta */
+        }
+
+        .option-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 1em;
+        }
+
+        .option-button:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+
+        .option-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .correct {
+            background-color: #28a745; /* Verde */
+        }
+
+        .incorrect {
+            background-color: #dc3545; /* Vermelho */
+        }
+
+        #progress {
+            margin-top: 20px;
+            font-size: 0.9em;
+            text-align: center;
+            color: #666;
+        }
+
+        #loading {
+            text-align: center;
+            font-size: 1.5em;
+            color: #007bff;
+        }
+
+        #results {
+            text-align: center;
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="quiz-container">
+        <h1>Quiz de Futebol</h1>
+        
+        <div id="loading">Carregando dados do quiz...</div>
+
+        <div id="quiz-content" style="display: none;">
+            <div id="question-text"></div>
+            <div id="options-container">
+                </div>
+            <div id="progress"></div>
+        </div>
+
+        <div id="results" style="display: none;">
+            <button class="option-button" onclick="window.location.reload()">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script>
+        // =======================================================
+        // DICIONÁRIO DE DADOS (Dicionário de Perguntas)
+        // =======================================================
+        const questionsData = [
+            {
+                question: "Qual país venceu a Copa do Mundo FIFA de 2014?",
+                options: ["Brasil", "Alemanha", "Argentina", "Espanha"],
+                correctAnswer: "Alemanha"
+            },
+            {
+                question: "Quantas Bolas de Ouro (Ballon d'Or) Cristiano Ronaldo ganhou em sua carreira até o final de 2023?",
+                options: ["4", "5", "6", "7"],
+                correctAnswer: "5"
+            },
+            {
+                question: "Qual clube de futebol é conhecido como 'Os Red Devils'?",
+                options: ["Liverpool FC", "Manchester United", "Chelsea FC", "Arsenal FC"],
+                correctAnswer: "Manchester United"
+            },
+            {
+                question: "Quem é o maior artilheiro da história da Copa do Mundo FIFA?",
+                options: ["Pelé", "Ronaldo Nazário", "Miroslav Klose", "Lionel Messi"],
+                correctAnswer: "Miroslav Klose"
+            },
+            {
+                question: "Em que ano a seleção brasileira conquistou seu primeiro título de Copa do Mundo?",
+                options: ["1950", "1958", "1962", "1970"],
+                correctAnswer: "1958"
+            },
+            {
+                question: "Qual o nome do estádio onde o time do Real Madrid manda seus jogos?",
+                options: ["Camp Nou", "Anfield", "Santiago Bernabéu", "Allianz Arena"],
+                correctAnswer: "Santiago Bernabéu"
+            },
+            {
+                question: "Qual jogador é o único a ter vencido a Copa do Mundo 3 vezes como jogador?",
+                options: ["Maradona", "Garrincha", "Pelé", "Beckenbauer"],
+                correctAnswer: "Pelé"
+            },
+            {
+                question: "Qual é a principal competição de clubes da Europa?",
+                options: ["UEFA Europa League", "Copa Libertadores", "Premier League", "UEFA Champions League"],
+                correctAnswer: "UEFA Champions League"
+            },
+            {
+                question: "Em 2022, qual país sul-americano venceu a Copa do Mundo?",
+                options: ["Brasil", "Argentina", "Uruguai", "Chile"],
+                correctAnswer: "Argentina"
+            },
+            {
+                question: "Qual goleiro brasileiro é famoso por ter marcado mais de 100 gols na carreira?",
+                options: ["Dida", "Rogério Ceni", "Júlio César", "Taffarel"],
+                correctAnswer: "Rogério Ceni"
+            }
+        ];
+
+        // Variáveis de Estado do Quiz
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let quizQuestions = [];
+
+        // Elementos do DOM
+        const loadingElement = document.getElementById('loading');
+        const quizContent = document.getElementById('quiz-content');
+        const resultsElement = document.getElementById('results');
+        const questionTextElement = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const progressElement = document.getElementById('progress');
+
+        // =======================================================
+        // FUNÇÃO ASYNC PARA CARREGAR OS DADOS
+        // =======================================================
+        async function fetchQuizData() {
+            // Simula uma requisição de rede (API call) com um pequeno delay de 500ms
+            console.log("Iniciando a simulação de carregamento de dados...");
+            await new Promise(resolve => setTimeout(resolve, 500)); 
+            console.log("Dados carregados com sucesso.");
+            
+            // Retorna o dicionário de dados do quiz
+            return questionsData;
+        }
+
+        // =======================================================
+        // FUNÇÕES DE LÓGICA DO QUIZ
+        // =======================================================
+
+        function displayQuestion() {
+            if (currentQuestionIndex < quizQuestions.length) {
+                const currentQuestion = quizQuestions[currentQuestionIndex];
+                
+                // Atualiza a barra de progresso
+                progressElement.textContent = `Pergunta ${currentQuestionIndex + 1} de ${quizQuestions.length}`;
+                
+                // Exibe a pergunta
+                questionTextElement.textContent = currentQuestion.question;
+                
+                // Limpa e exibe as opções
+                optionsContainer.innerHTML = '';
+                currentQuestion.options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.classList.add('option-button');
+                    button.textContent = option;
+                    
+                    // Adiciona o listener para a função de tratamento de resposta
+                    button.addEventListener('click', () => handleAnswer(option, currentQuestion.correctAnswer));
+                    
+                    optionsContainer.appendChild(button);
+                });
+            } else {
+                // Fim do quiz
+                showResults();
+            }
+        }
+
+        function handleAnswer(selectedAnswer, correctAnswer) {
+            // Desabilita todos os botões após a seleção
+            const buttons = optionsContainer.querySelectorAll('.option-button');
+            buttons.forEach(button => button.disabled = true);
+
+            let isCorrect = selectedAnswer === correctAnswer;
+
+            // Percorre e marca os botões com as classes corretas
+            buttons.forEach(button => {
+                if (button.textContent === correctAnswer) {
+                    button.classList.add('correct');
+                } else if (button.textContent === selectedAnswer) {
+                    // Se for a resposta errada escolhida, marca como incorreta
+                    button.classList.add('incorrect');
+                }
+            });
+
+            if (isCorrect) {
+                score++;
+            }
+
+            // Pausa brevemente para o usuário ver o feedback antes de ir para a próxima pergunta
+            setTimeout(() => {
+                currentQuestionIndex++;
+                displayQuestion();
+            }, 1500); // 1.5 segundo
+        }
+
+        function showResults() {
+            quizContent.style.display = 'none';
+            resultsElement.style.display = 'block';
+            
+            const totalQuestions = quizQuestions.length;
+            const percentage = (score / totalQuestions) * 100;
+
+            resultsElement.innerHTML = `
+                <h2>Quiz Finalizado!</h2>
+                <p>Sua pontuação final é: <strong>${score} de ${totalQuestions}</strong>.</p>
+                <p>Aproveitamento: ${percentage.toFixed(0)}%</p>
+                <button class="option-button" onclick="window.location.reload()">Jogar Novamente</button>
+            `;
+        }
+
+        // =======================================================
+        // FUNÇÃO DE INICIALIZAÇÃO (CHAMADA PRINCIPAL ASYNC)
+        // =======================================================
+        async function initQuiz() {
+            try {
+                // 1. Usa o await para carregar os dados de forma assíncrona
+                quizQuestions = await fetchQuizData();
+                
+                // 2. Oculta o loading e exibe o conteúdo do quiz
+                loadingElement.style.display = 'none';
+                quizContent.style.display = 'block';
+                
+                // 3. Inicia o quiz
+                displayQuestion();
+
+            } catch (error) {
+                loadingElement.textContent = "Erro ao carregar o quiz. Por favor, tente novamente.";
+                console.error("Erro na inicialização do quiz:", error);
+            }
+        }
+
+        // Inicia o quiz quando a página carrega
+        window.onload = initQuiz;
+    </script>
+</body>
+</html>
